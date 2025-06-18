@@ -1,0 +1,1902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Satellite Data Hub</title>
+    <!-- Leaflet.js for Interactive Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #1a73e8;
+            --secondary-color: #0d47a1;
+            --accent-color: #34a853;
+            --danger-color: #ea4335;
+            --warning-color: #fbbc05;
+            --dark-color: #202124;
+            --light-color: #f8f9fa;
+            --gray-color: #5f6368;
+            --storage-color: #673ab7;
+            --israel-color: #004aad;
+            --empty-color: #b0b0b0;
+            --satellite-color: #ff5722;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+
+        .navbar {
+            background-color: var(--primary-color);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo i {
+            font-size: 1.8rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .navbar a:hover {
+            color: rgba(255, 255, 255, 0.9);
+            transform: translateY(-2px);
+        }
+
+        .hero {
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), 
+                        url('https://images.unsplash.com/photo-1508817628294-5a453fa0b8fb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80');
+            background-size: cover;
+            background-position: center;
+            height: 70vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: white;
+            padding: 0 20px;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            max-width: 700px;
+            margin-bottom: 2rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .cta-button {
+            background-color: var(--accent-color);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cta-button:hover {
+            background-color: #2d9247;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .dashboard {
+            padding: 4rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 3rem;
+            font-size: 2.5rem;
+            color: var(--dark-color);
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 4px;
+            background-color: var(--primary-color);
+            margin: 1rem auto 0;
+            border-radius: 2px;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .status-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .status-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-card h3 {
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+            color: var(--gray-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .status-card p {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .status-card .status-icon {
+            font-size: 1.5rem;
+        }
+
+        .network-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin-bottom: 3rem;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-header h3 {
+            font-size: 1.5rem;
+            color: var(--dark-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .network-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.5rem;
+        }
+
+        .network-table th, .network-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .network-table th {
+            background-color: #f5f7fa;
+            color: var(--gray-color);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        .network-table tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.35rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-success {
+            background-color: #e6f4ea;
+            color: var(--accent-color);
+        }
+
+        .badge-warning {
+            background-color: #fef7e0;
+            color: var(--warning-color);
+        }
+
+        .badge-danger {
+            background-color: #fce8e6;
+            color: var(--danger-color);
+        }
+
+        .badge-storage {
+            background-color: #ede7f6;
+            color: var(--storage-color);
+        }
+
+        .badge-israel {
+            background-color: #e6f0fa;
+            color: var(--israel-color);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(26, 115, 232, 0.3);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-outline:hover {
+            background-color: rgba(26, 115, 232, 0.1);
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #d32f2f;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(234, 67, 53, 0.3);
+        }
+
+        .map-section {
+            padding: 4rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: #f5f7fa;
+            border-radius: 12px;
+        }
+
+        #map-container {
+            height: 500px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1.5rem;
+            border: 1px solid #ddd;
+        }
+
+        .map-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .map-legend {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            font-size: 0.9rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+        }
+
+        .vpn-server-select {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .vpn-server-select label {
+            font-weight: 500;
+            color: var(--dark-color);
+        }
+
+        .vpn-server-select select {
+            padding: 0.75rem;
+            font-size: 1rem;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            background-color: white;
+            min-width: 250px;
+            transition: all 0.3s ease;
+        }
+
+        .vpn-server-select select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+        }
+
+        .speed-test {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: white;
+            margin: 2rem 0;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .speed-test-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .speedometer {
+            position: relative;
+            width: 200px;
+            height: 100px;
+            margin: 2rem auto;
+            background: #f5f5f5;
+            border-radius: 100px 100px 0 0;
+            overflow: hidden;
+        }
+
+        .speedometer::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: conic-gradient(
+                #ea4335 0% 20%,
+                #fbbc05 20% 40%,
+                #34a853 40% 100%
+            );
+            transform-origin: bottom center;
+            transform: rotate(0.5turn);
+            border-radius: inherit;
+        }
+
+        .speedometer-needle {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 90px;
+            background-color: var(--dark-color);
+            border-radius: 4px 4px 0 0;
+            z-index: 10;
+            transform-origin: bottom center;
+            transition: transform 1s ease-out;
+        }
+
+        .speedometer-label {
+            position: absolute;
+            bottom: -30px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+
+        .speed-test-result {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .speed-test-item {
+            text-align: center;
+        }
+
+        .speed-test-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .speed-test-label {
+            font-size: 0.9rem;
+            color: var(--gray-color);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .data-storage {
+            padding: 4rem 2rem;
+            background: white;
+            margin: 2rem 0;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .storage-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .storage-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .storage-card {
+            background: #f5f7fa;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .storage-card h3 {
+            color: var(--storage-color);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .storage-progress {
+            height: 10px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            margin: 1rem 0;
+            overflow: hidden;
+        }
+
+        .storage-progress-bar {
+            height: 100%;
+            background: var(--storage-color);
+            border-radius: 5px;
+            transition: width 1s ease;
+        }
+
+        .storage-stats {
+            display: flex;
+            justify-content: space-between;
+            color: var(--gray-color);
+            font-size: 0.9rem;
+        }
+
+        .israel-systems {
+            padding: 4rem 2rem;
+            background: white;
+            margin: 2rem 0;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .israel-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .israel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .israel-card {
+            background: #e6f0fa;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .israel-card.empty {
+            background: #f5f5f5;
+            border: 2px dashed var(--empty-color);
+            color: var(--empty-color);
+        }
+
+        .israel-card.empty h3 {
+            color: var(--empty-color);
+        }
+
+        .israel-card.empty p {
+            color: var(--empty-color);
+            font-style: italic;
+        }
+
+        .israel-card h3 {
+            color: var(--israel-color);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .israel-card p {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--israel-color);
+        }
+
+        .israel-controls {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .ethical-disclaimer {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f5f7fa;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: var(--gray-color);
+            text-align: center;
+            border: 1px solid var(--israel-color);
+            position: relative;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        .ethical-disclaimer:hover::after {
+            content: 'This ensures all actions are simulated and have no real-world consequences.';
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--dark-color);
+            color: white;
+            padding: 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            z-index: 10;
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        .global-connections {
+            padding: 4rem 2rem;
+            background: white;
+            margin: 2rem 0;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .connections-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .chart-container {
+            margin-top: 2rem;
+            height: 400px;
+        }
+
+        .auth-container {
+            max-width: 600px;
+            margin: 4rem auto;
+            padding: 2.5rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .auth-container h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 1.8rem;
+            color: var(--dark-color);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--gray-color);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+        }
+
+        .error-message {
+            color: var(--danger-color);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .auth-btn:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .auth-toggle {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: var(--gray-color);
+        }
+
+        .auth-toggle a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .auth-toggle a:hover {
+            text-decoration: underline;
+        }
+
+        .admin-log {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: #f5f7fa;
+            border-radius: 8px;
+        }
+
+        .admin-log h3 {
+            margin-bottom: 1rem;
+            color: var(--dark-color);
+        }
+
+        .log-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .log-table th, .log-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .log-table th {
+            background-color: #e0e0e0;
+            font-weight: 600;
+            color: var(--gray-color);
+        }
+
+        #notification {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            z-index: 1000;
+            color: white;
+            font-weight: 500;
+        }
+
+        .blocked {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        @media (max-width: 992px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero p {
+                font-size: 1.1rem;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1rem;
+            }
+            
+            .nav-links {
+                width: 100%;
+                justify-content: space-around;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+            
+            .hero {
+                height: 60vh;
+            }
+            
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .map-controls {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+            
+            .vpn-server-select {
+                width: 100%;
+            }
+            
+            .vpn-server-select select {
+                width: 100%;
+            }
+            
+            .israel-controls {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .dashboard {
+                padding: 2rem 1rem;
+            }
+            
+            .status-grid, .israel-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .auth-container {
+                padding: 1.5rem;
+                margin: 2rem auto;
+            }
+            
+            .speed-test-result {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .storage-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="notification"></div>
+
+    <nav class="navbar">
+        <div class="logo">
+            <i class="fas fa-globe"></i>
+            <span>Global Data Hub</span>
+        </div>
+        <div class="nav-links">
+            <a href="#home"><i class="fas fa-home"></i> Home</a>
+            <a href="#dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <a href="#speed-test"><i class="fas fa-bolt"></i> Speed Test</a>
+            <a href="#israel"><i class="fas fa-shield-alt"></i> Israel Systems</a>
+            <a href="#storage"><i class="fas fa-database"></i> Data Storage</a>
+            <a href="#connections"><i class="fas fa-network-wired"></i> Global Connections</a>
+            <a href="#map"><i class="fas fa-map-marked-alt"></i> Map</a>
+            <a href="#auth"><i class="fas fa-user"></i> Admin</a>
+        </div>
+    </nav>
+
+    <section id="home" class="hero">
+        <h1>Global Satellite Data Hub</h1>
+        <p>The world's first unified satellite network connecting all devices and storing all global data in one secure, decentralized system.</p>
+        <button class="cta-button" aria-label="Access Global Network" onclick="scrollToSection('dashboard')">
+            <i class="fas fa-rocket"></i> Access Global Network
+        </button>
+    </section>
+
+    <section id="dashboard" class="dashboard">
+        <h2 class="section-title">Global Network Dashboard</h2>
+        <div class="status-grid">
+            <div class="status-card">
+                <h3><i class="fas fa-satellite-dish status-icon"></i> Connected Satellites</h3>
+                <p id="connected-satellites">-</p>
+            </div>
+            <div class="status-card">
+                <h3><i class="fas fa-globe status-icon"></i> Satellite Coverage</h3>
+                <p id="satellite-coverage">-</p>
+            </div>
+            <div class="status-card">
+                <h3><i class="fas fa-signal status-icon"></i> Global Signal Strength</h3>
+                <p id="signal-strength">-</p>
+            </div>
+            <div class="status-card">
+                <h3><i class="fas fa-laptop status-icon"></i> Connected Devices</h3>
+                <p id="connected-devices">-</p>
+            </div>
+            <div class="status-card">
+                <h3><i class="fas fa-database status-icon"></i> Data Stored</h3>
+                <p id="data-stored">-</p>
+            </div>
+            <div class="status-card">
+                <h3><i class="fas fa-shield-alt status-icon"></i> Security Status</h3>
+                <p id="security-status">-</p>
+            </div>
+            <div class="status-card">
+                <h3><i class="fas fa-exchange-alt status-icon"></i> Data Transfer Rate</h3>
+                <p id="data-transfer">-</p>
+            </div>
+        </div>
+        <div class="network-section">
+            <div class="section-header">
+                <h3><i class="fas fa-satellite"></i> Satellite Distribution</h3>
+            </div>
+            <div class="chart-container" style="height: 300px;">
+                <canvas id="satellite-chart"></canvas>
+            </div>
+        </div>
+        <div class="network-section">
+            <div class="section-header">
+                <h3><i class="fas fa-network-wired"></i> Global Network Nodes</h3>
+                <button class="btn btn-outline" aria-label="Refresh Network Data" onclick="updateNetwork()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+            <table class="network-table" id="network-table">
+                <thead>
+                    <tr>
+                        <th>Node Location</th>
+                        <th>Satellite Count</th>
+                        <th>Connected Devices</th>
+                        <th>Data Stored</th>
+                        <th>Status</th>
+                        <th>Latency</th>
+                    </tr>
+                </thead>
+                <tbody id="network-tbody"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section id="speed-test" class="speed-test">
+        <div class="speed-test-container">
+            <h2 class="section-title">Network Speed Test</h2>
+            <p>Test the performance of the global network in real-time</p>
+            <div class="speedometer">
+                <div class="speedometer-needle"></div>
+                <div class="speedometer-label" id="speedometer-value">0 Mbps</div>
+            </div>
+            <div class="speed-test-result">
+                <div class="speed-test-item">
+                    <div class="speed-test-value" id="download-speed">-</div>
+                    <div class="speed-test-label">Download</div>
+                </div>
+                <div class="speed-test-item">
+                    <div class="speed-test-value" id="upload-speed">-</div>
+                    <div class="speed-test-label">Upload</div>
+                </div>
+                <div class="speed-test-item">
+                    <div class="speed-test-value" id="ping">-</div>
+                    <div class="speed-test-label">Ping</div>
+                </div>
+            </div>
+            <button class="btn btn-primary" aria-label="Run Speed Test" onclick="runSpeedTest()">
+                <i class="fas fa-bolt"></i> Run Speed Test
+            </button>
+        </div>
+    </section>
+
+    <section id="israel" class="israel-systems">
+        <div class="israel-container">
+            <h2 class="section-title">Israel Systems Overview</h2>
+            <p>Monitor Israel’s satellite, air defense, and cybersecurity systems integrated with the global network</p>
+            <div class="ethical-disclaimer" title="This ensures all actions are simulated and have no real-world consequences.">
+                <i class="fas fa-info-circle"></i> All modifications to Israel’s data (e.g., deletion or updates) are purely visual, simulated within this application, and have <strong>no</strong> real-world impact.
+            </div>
+            <div class="chart-container" style="height: 300px; margin-bottom: 2rem;">
+                <canvas id="israel-chart"></canvas>
+            </div>
+            <div class="israel-grid">
+                <div class="israel-card">
+                    <h3><i class="fas fa-satellite"></i> Active Satellites</h3>
+                    <p id="israel-satellites">-</p>
+                </div>
+                <div class="israel-card">
+                    <h3><i class="fas fa-wifi"></i> Satellite Bandwidth</h3>
+                    <p id="israel-satellite-bandwidth">-</p>
+                </div>
+                <div class="israel-card">
+                    <h3><i class="fas fa-shield-alt"></i> Air Defense Systems</h3>
+                    <p id="israel-defense-systems">-</p>
+                </div>
+                <div class="israel-card">
+                    <h3><i class="fas fa-radar"></i> Radar Uptime</h3>
+                    <p id="israel-radar-uptime">-</p>
+                </div>
+                <div class="israel-card">
+                    <h3><i class="fas fa-lock"></i> Cybersecurity Status</h3>
+                    <p id="israel-cybersecurity">-</p>
+                </div>
+            </div>
+            <div class="israel-controls">
+                <button class="btn btn-primary" aria-label="Refresh Israel Systems" onclick="updateIsraelSystems(true)">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+                <button id="toggle-israel-data" class="btn btn-danger" aria-label="Delete Israel Data" onclick="confirmToggleIsraelData()">
+                    <i class="fas fa-trash-alt"></i> Delete Data
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <section id="storage" class="data-storage">
+        <div class="storage-container">
+            <h2 class="section-title">Global Data Storage</h2>
+            <p>Centralized storage for all connected devices worldwide with real-time synchronization and backup</p>
+            <div class="chart-container" style="height: 300px; margin-bottom: 2rem;">
+                <canvas id="storage-chart"></canvas>
+            </div>
+            <div class="storage-grid">
+                <div class="storage-card">
+                    <h3><i class="fas fa-user"></i> Personal Data</h3>
+                    <div class="storage-progress">
+                        <div class="storage-progress-bar" id="personal-storage-bar" style="width: 65%"></div>
+                    </div>
+                    <div class="storage-stats">
+                        <span>4.2 ZB / 6.5 ZB</span>
+                        <span>65%</span>
+                    </div>
+                </div>
+                <div class="storage-card">
+                    <h3><i class="fas fa-building"></i> Enterprise Data</h3>
+                    <div class="storage-progress">
+                        <div class="storage-progress-bar" id="enterprise-storage-bar" style="width: 82%"></div>
+                    </div>
+                    <div class="storage-stats">
+                        <span>9.8 ZB / 12 ZB</span>
+                        <span>82%</span>
+                    </div>
+                </div>
+                <div class="storage-card">
+                    <h3><i class="fas fa-cloud"></i> Public Cloud</h3>
+                    <div class="storage-progress">
+                        <div class="storage-progress-bar" id="cloud-storage-bar" style="width: 45%"></div>
+                    </div>
+                    <div class="storage-stats">
+                        <span>6.3 ZB / 14 ZB</span>
+                        <span>45%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="storage-card" style="margin-top: 2rem;">
+                <h3><i class="fas fa-globe"></i> Total Global Storage</h3>
+                <div class="storage-progress">
+                    <div class="storage-progress-bar" id="total-storage-bar" style="width: 68%"></div>
+                </div>
+                <div class="storage-stats">
+                    <span>20.3 ZB / 30 ZB</span>
+                    <span>68%</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="connections" class="global-connections">
+        <div class="connections-container">
+            <h2 class="section-title">Global Device Connections</h2>
+            <p>Real-time visualization of all devices connected to the Global Data Hub network</p>
+            <div class="chart-container">
+                <canvas id="connections-chart"></canvas>
+            </div>
+        </div>
+    </section>
+
+    <section id="map" class="map-section">
+        <h2 class="section-title">Global Network Map</h2>
+        <div class="map-controls">
+            <div class="map-legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #4285F4;"></div>
+                    <span>Data Center</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #EA4335;"></div>
+                    <span>High Density Area</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #34A853;"></div>
+                    <span>Data Flow</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #673AB7;"></div>
+                    <span>Storage Node</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #004AAD;"></div>
+                    <span>Israel Systems</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #FF5722;"></div>
+                    <span>Satellite Orbit</span>
+                </div>
+            </div>
+            <div class="vpn-server-select">
+                <label for="data-view"><i class="fas fa-filter"></i> View:</label>
+                <select id="data-view" onchange="updateMapView()">
+                    <option value="all">All Connections</option>
+                    <option value="personal">Personal Devices</option>
+                    <option value="enterprise">Enterprise Systems</option>
+                    <option value="iot">IoT Devices</option>
+                    <option value="israel">Israel Systems</option>
+                    <option value="satellites">Satellite Orbits</option>
+                </select>
+            </div>
+        </div>
+        <div id="map-container"></div>
+    </section>
+
+    <section id="auth" class="auth-container">
+        <div id="login-form">
+            <h2>Administrator Access</h2>
+            <div class="form-group">
+                <label for="login-email">Security ID</label>
+                <input type="text" id="login-email" class="form-control" placeholder="Enter security ID" required aria-required="true" aria-describedby="login-email-error">
+                <span id="login-email-error" class="error-message">Please enter a valid Security ID</span>
+            </div>
+            <div class="form-group">
+                <label for="login-password">Quantum Key</label>
+                <input type="password" id="login-password" class="form-control" placeholder="Enter quantum encryption key" required aria-required="true" aria-describedby="login-password-error">
+                <span id="login-password-error" class="error-message">Quantum Key must be at least 8 characters</span>
+            </div>
+            <button class="auth-btn" aria-label="Authenticate" onclick="handleLogin()">Authenticate</button>
+            <div class="auth-toggle">
+                <p>Need higher access? <a href="#" onclick="toggleAuthForm()">Request Level 2</a></p>
+            </div>
+        </div>
+        <div id="signup-form" style="display: none;">
+            <h2>Level 2 Access Request</h2>
+            <div class="form-group">
+                <label for="signup-name">Full Name</label>
+                <input type="text" id="signup-name" class="form-control" placeholder="Enter your full name" required aria-required="true" aria-describedby="signup-name-error">
+                <span id="signup-name-error" class="error-message">Please enter your full name</span>
+            </div>
+            <div class="form-group">
+                <label for="signup-email">Security ID</label>
+                <input type="text" id="signup-email" class="form-control" placeholder="Enter your security ID" required aria-required="true" aria-describedby="signup-email-error">
+                <span id="signup-email-error" class="error-message">Please enter a valid Security ID</span>
+            </div>
+            <div class="form-group">
+                <label for="signup-password">Current Quantum Key</label>
+                <input type="password" id="signup-password" class="form-control" placeholder="Enter current key" required aria-required="true" aria-describedby="signup-password-error">
+                <span id="signup-password-error" class="error-message">Quantum Key must be at least 8 characters</span>
+            </div>
+            <button class="auth-btn" aria-label="Request Level 2 Access" onclick="handleSignup()">Request Access</button>
+            <div class="auth-toggle">
+                <p>Already have Level 1? <a href="#" onclick="toggleAuthForm()">Back to Login</a></p>
+            </div>
+        </div>
+        <div class="admin-log">
+            <h3>Admin Action Log</h3>
+            <table class="log-table">
+                <thead>
+                    <tr>
+                        <th>Action</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-log-tbody"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        let globalConnections = 0;
+        let globalDataStored = 0;
+        let map;
+        let connectionLines = [];
+        let dataCenters = [];
+        let storageNodes = [];
+        let israelNodes = [];
+        let satelliteOrbits = [];
+        let connectionsChart;
+        let storageChart;
+        let israelChart;
+        let satelliteChart;
+        let isIsraelDataDeleted = false;
+        let adminLog = [
+            { action: 'Added Global Satellite Enhancements', timestamp: new Date().toLocaleString('en-US', { timeZone: 'UTC' }) },
+            { action: 'Enhanced Ethical Disclaimer for Israel Data', timestamp: new Date().toLocaleString('en-US', { timeZone: 'UTC' }) }
+        ];
+
+        function throttle(fn, wait) {
+            let lastCall = 0;
+            return function (...args) {
+                const now = new Date().getTime();
+                if (now - lastCall >= wait) {
+                    lastCall = now;
+                    return fn(...args);
+                }
+            };
+        }
+
+        function scrollToSection(sectionId) {
+            document.getElementById(sectionId).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function showNotification(message, type) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.backgroundColor = type === 'success' ? '#34a853' : '#ea4335';
+            notification.style.display = 'block';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        function init() {
+            initializeMap();
+            initializeConnectionsChart();
+            initializeStorageChart();
+            initializeIsraelChart();
+            initializeSatelliteChart();
+            updateDashboard();
+            updateNetwork();
+            updateIsraelSystems();
+            simulateGlobalConnections();
+            simulateSatelliteOrbits();
+            updateAdminLog();
+            setInterval(throttle(updateDashboard, 5000), 5000);
+            setInterval(throttle(simulateGlobalConnections, 7000), 7000);
+            setInterval(throttle(simulateSatelliteOrbits, 10000), 10000);
+        }
+
+        function initializeMap() {
+            const mapContainer = document.getElementById('map-container');
+            if (!mapContainer) {
+                showNotification('Map container not found.', 'error');
+                return;
+            }
+            try {
+                map = L.map('map-container').setView([20, 0], 2);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: 'Map data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(map);
+
+                dataCenters = [
+                    { name: 'North America DC', lat: 40.7128, lng: -74.0060, capacity: '15 ZB' },
+                    { name: 'Europe DC', lat: 51.5074, lng: -0.1278, capacity: '12 ZB' },
+                    { name: 'Asia DC', lat: 35.6762, lng: 139.6503, capacity: '18 ZB' },
+                    { name: 'Oceania DC', lat: -33.8688, lng: 151.2093, capacity: '8 ZB' },
+                    { name: 'South America DC', lat: -23.5505, lng: -46.6333, capacity: '10 ZB' },
+                    { name: 'Africa DC', lat: -26.2041, lng: 28.0473, capacity: '7 ZB' }
+                ].map(dc => {
+                    const marker = L.marker([dc.lat, dc.lng], {
+                        icon: L.divIcon({
+                            className: 'custom-icon',
+                            html: `<div style="background-color: #4285F4; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white;"></div>`
+                        })
+                    })
+                    .addTo(map)
+                    .bindPopup(`<b>${dc.name}</b><br>Capacity: ${dc.capacity}<br>Location: ${dc.lat}°N, ${dc.lng}°E`);
+                    return { ...dc, marker };
+                });
+
+                storageNodes = [
+                    { name: 'Node NA-1', lat: 37.7749, lng: -122.4194, devices: '2.1B' },
+                    { name: 'Node EU-1', lat: 48.8566, lng: 2.3522, devices: '1.8B' },
+                    { name: 'Node AS-1', lat: 22.3193, lng: 114.1694, devices: '3.2B' },
+                    { name: 'Node SA-1', lat: -34.6037, lng: -58.3816, devices: '1.1B' },
+                    { name: 'Node AF-1', lat: 30.0444, lng: 31.2357, devices: '0.9B' },
+                    { name: 'Node OC-1', lat: -36.8485, lng: 174.7633, devices: '0.5B' }
+                ].map(node => {
+                    const marker = L.marker([node.lat, node.lng], {
+                        icon: L.divIcon({
+                            className: 'custom-icon',
+                            html: `<div style="background-color: #673AB7; width: 12px; height: 12px; border-radius: 50%; border: none;"></div>`
+                        })
+                    })
+                    .addTo(map)
+                    .bindPopup(`<b>${node.name}</b><br>Connected Devices: ${node.devices}`);
+                    return { ...node, marker };
+                });
+
+                israelNodes = [
+                    { name: 'Ofek Satellite Hub', lat: 32.0809, lng: 34.7806, type: 'Satellite', capacity: '750 TB', satellites: 12 },
+                    { name: 'Iron Dome Control', lat: 31.7767, lng: 35.19, type: 'Air Defense', status: 'Enhanced' },
+                    { name: 'Cyber Defense Center', lat: 32.0853, lng: 34.7818, type: 'Cybersecurity', security: '98%' }
+                ].map(node => {
+                    const marker = L.marker([node.lat, node.lng], {
+                        icon: L.divIcon({
+                            className: 'custom-icon',
+                            html: `<div style="background-color: #004AAD; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>`
+                        })
+                    })
+                    .addTo(map)
+                    .bindPopup(`<b>${node.name}</b><br>Type: ${node.type}<br>${node.type === 'Satellite' ? 'Capacity: ' + node.capacity + '<br>Satellites: ' + node.satellites : node.type === 'Cybersecurity' ? 'Security: ' + node.security : 'Status: ' + node.status}`);
+                    return { ...node, marker };
+                });
+
+                const highDensityAreas = [
+                    { lat: 40.7128, lng: -74.0060, radius: 800000, devices: '1.2B' },
+                    { lat: 34.0522, lng: -118.2437, radius: 700000, devices: '1.0B' },
+                    { lat: 51.5074, lng: -0.1278, radius: 600000, devices: '0.9B' },
+                    { lat: 35.6762, lng: 139.6503, radius: 750000, devices: '1.1B' },
+                    { lat: 22.3193, lng: 114.1694, radius: 500000, devices: '0.8B' },
+                    { lat: -23.5505, lng: -46.6333, radius: 400000, devices: '0.6B' },
+                    { lat: 32.0853, lng: 34.7818, radius: 300000, devices: '0.45B' }
+                ];
+
+                highDensityAreas.forEach(area => {
+                    L.circle([area.lat, area.lng], {
+                        color: '#EA4335',
+                        fillColor: '#EA4335',
+                        fillOpacity: 0.2,
+                        radius: area.radius
+                    })
+                    .addTo(map)
+                    .bindPopup(`<b>High Density Area</b>`<br>Connected Devices: ${area.devices}`);
+                });
+
+                updateMapConnections();
+            } catch (error) {
+                showNotification('Failed to initialize map.', 'error');
+                console.error(error);
+            }
+        }
+
+        function initializeSatelliteChart() {
+            const ctx = document.getElementById('satellite-chart').getElementsById('satellite-chart');
+            if (!ctx) {
+                showNotification('Satellite chart canvas not found.', 'error');
+                return;
+            }
+            try {
+                satelliteChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['North America', 'Europe', 'Asia', 'Oceania', 'South America', 'Africa', 'Israel'],
+                        datasets: [{
+                            label: 'Satellite Count',
+                            data: [50, 40, 35, 20, 25, 15, 12],
+                            backgroundColor: [
+                                'rgba(66, 133, 244, 0.6)',
+                                'rgba(52, 168, 83, 0.6)',
+                                '#rgba(251, 188, 5, 0.6)',
+                                'rgba(103, 58, 183, 0.6)',
+                                '#rgba(234, 87, 34, 0.6)',
+                                '#rgba(200, 200, 200, 0.6)',
+                                'rgba(0, 255, 255, 0.6)'
+                            ],
+                            borderColor: ['#4285F4', '#34A853', '#FF5722', '#673AB7', '#EA4335', '#888888', '#004AAD'],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Global Satellite Distribution by Region',
+                                font: { size: 16 }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) {
+                                        return `${context.label}: ${context.raw} satellites`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                showNotification('Failed to initialize satellite chart.', 'error');
+                console.error(error);
+            }
+        }
+
+        function initializeConnectionsChart() {
+            const ctx = document.getElementById('connections-chart').getElementsById('chart');
+            if (!ctx) {
+                showNotification('Connections chart canvas not found.', 'error');
+                return;
+            }
+            try {
+                connectionsChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+                        datasets: [
+                            {
+                                label: 'Personal Devices',
+                                data: Array.from({length: 24}, () => Math.floor(Math.random() * 500) + 1500)),
+                                borderColor: '#4285F4',
+                                backgroundColor: 'rgba(66, 133, 244, 0.1)',
+                                tension: 0.4,
+                                fill: true
+                            },
+                            },
+                            {
+                                label: 'Enterprise Systems',
+                                data: Array.from({length: 24}, () => Math.floor(Math.random() * 300) + 800)),
+                                borderColor: '#34A853',
+                                backgroundColor: 'rgba(52, 168, 83, 0.1)',
+                                tension: 0.4,
+                                fill: true
+                            },
+                            {
+                                label: 'IoT Devices',
+                                data: Array.from({length: 24}, () => Math.floor(Math.random() * 1000) + 3000)),
+                                borderColor: '#FBBC05',
+                                backgroundColor: 'rgba(251, 188, 5, 0.1)',
+                                tension: 0.4,
+                                fill: true
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Global Device Connections (Billions)',
+                                font: { size: 16 }
+                            },
+                            tooltip: { mode: 'index', intersect: false }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                title: { display: true, text: 'Connected Devices (Billions)' }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                showNotification('Failed to initialize connections chart.', 'error');
+                console.error(error);
+            }
+        }
+
+        function initializeStorageChart() {
+            const ctx = document.getElementById('storage-chart').getElementsById('chart');
+            if (!ctx) {
+                showNotification('Storage chart canvas not found.', 'error');
+                return;
+            }
+            try {
+                storageChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Personal', 'Enterprise', 'Public', 'Cloud', 'Total'],
+                        datasets: [{
+                            label: 'Storage', 'Usage (ZB)',
+                            data: [4.2, 9.8, 6.3, 20.3],
+                            backgroundColor: [
+                                'rgba(66, 133, 244, 0.6)',
+                                'rgba(52, 168, 83, 0.6)',
+                                'rgba(251, 188, 5, 0.6)',
+                                'rgba(103, 58, 183, 0.6)'
+                            ],
+                            borderColor: ['#4285F4', '#34A853', '#FBBC05', '#673AB7'],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: {
+                            title: { 
+                                display: true, 
+                                text: 'Global Storage Distribution', 
+                                font: { size: 16 } 
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: { display: true, 'text:' 'Storage (Zettabytes)' }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                showNotification('Failed to initialize storage chart.', 'error');
+                console.error(error);
+            }
+        }
+
+        function initializeIsraelChart() {
+            const ctx = document.getElementById('israel-chart').getElementsById('chart');
+            if (!ctx) {
+                showNotification('Israel chart canvas not found.', 'error');
+                return;
+            }
+            try {
+                israelChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Satellites', 'Bandwidth', 'Defense', 'Systems', 'Uptime', 'Cybersecurity'],
+                        datasets: [{
+                            label: 'Israel', 'Systems', 'Metrics',
+                            data: [12, 15.0, 5, 98.5, 98],
+                            backgroundColor: 'rgba(0, 74, 173, 0.6)',
+                            borderColor: '#004AAD',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Israel’s Satellite, Defense, and Cybersecurity Systems',
+                                font: { size: 16 }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        if (israelDataDeleted) {
+                                            return 'No Data Available';
+                                        }
+                                        const units = ['Count', 'Gbps', 'Count', '%', '%'];
+                                        return `${context.dataset.label}: ${context.raw} ${units[context.dataIndex]}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: { display: true, 'text:' 'Metrics' }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                showNotification('Failed to initialize Israel systems chart.', 'error');
+                console.error(error);
+            }
+        }
+
+        function updateDashboard() {
+            try {
+                const connectedSatellites = Math.floor(Math.random() * 50 + 150); // 150-200
+                const satelliteCoverage = Math.floor(Math.random() * 10 + 90) + '%'; // 90-100%
+                const signalStrength = Math.floor(Math.random() * 20 + 80) + '%'; // 80-100%
+                const securityStatuses = ['Secure', 'Protected', 'Encrypted'];
+                const dataTransfer = (Math.random() * 50 + 150).toFixed(2) + ' ZB/s';
+
+                globalConnections = 8500 + Math.floor(Math.random() * 500); // 8500-9000
+                globalDataStored = 20.3 + (Math.random() * 0.5); // 20.3-20.8
+
+                document.getElementById('connected-satellites').textContent = connectedSatellites;
+                document.getElementById('satellite-coverage').textContent = satelliteCoverage;
+                document.getElementById('signal-strength').textContent = signalStrength;
+                document.getElementById('connected-devices').textContent = globalConnections.toLocaleString() + 'B';
+                document.getElementById('data-stored').textContent = globalDataStored.toFixed(1) + ' ZB';
+                document.getElementById('security-status').textContent = securityStatuses[Math.floor(Math.random() * securityStatuses.length)];
+                document.getElementById('data-transfer').textContent = dataTransfer;
+
+                if (satelliteChart) {
+                    satelliteChart.data.datasets[0].data = [
+                        Math.floor(Math.random() * 10 + 45), // North America: 45-55
+                        Math.floor(Math.random() * 8 + 35), // Europe: 35-43
+                        Math.floor(Math.random() * 8 + 30), // Asia: 30-38
+                        Math.floor(Math.random() * 5 + 15), // Oceania: 15-20
+                        Math.floor(Math.random() * 6 + 20), // South America: 20-26
+                        Math.floor(Math.random() * 5 + 10), // Africa: 10-15
+                        isIsraelDataDeleted ? 0 : 12 // Israel: 12 or 0 if deleted
+                    ];
+                    satelliteChart.update();
+                }
+            } catch (error) {
+                showNotification('Failed to update dashboard.', 'error');
+                console.error(error);
+            }
+        }
+
+        function updateNetwork() {
+            try {
+                const locations = [
+                    { name: 'North America', satellites: 50 },
+                    { name: 'Europe', satellites: 40 },
+                    { name: 'Asia', satellites: 35 },
+                    { name: 'Oceania', satellites: 20 },
+                    { name: 'South America', satellites: 25 },
+                    { name: 'Africa', satellites: 15 },
+                    { name: 'Israel', satellites: 12 }
+                ];
+                const statuses = ['Optimal', 'Operational', 'High Load'];
+                const tbody = document.getElementById('network-tbody');
+                if (!tbody) {
+                    showNotification('Network table not found.', 'error');
+                    return;
+                }
+                tbody.innerHTML = '';
+
+                locations.forEach(location => {
+                    if (location.name === 'Israel' && isIsraelDataDeleted) return;
+                    const satellites = location.satellites + Math.floor(Math.random() * 5); // Add variation
+                    const devices = (1 + Math.random() * 4).toFixed(2) + 'px'; 'B'; // 1-4B
+                    const data = (2 + Math.random() * 7).toFixed(2) + 'px'; 'ZB'; // 2-7ZB
+                    const latency = Math.floor(Math.random() * 40 + 10) + 'px'; 'ms'; // 10-40 ms
+                    const status = location.name === 'Israel' ? 'Enhanced' : statuses[Math.floor(Math.random() * statuses.length)];
+                    let badgeClass = 'badge-success';
+                    if (status === 'High Load') badgeClass = 'badge-warning';
+                    if (location.name === 'Israel') badgeClass = 'badge-israel';
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${location.name}</td>
+                        <td>${satellites}</td>
+                        <td>${devices}</td>
+                        <td>${data}</td>
+                        <td><span class="${badgeClass}">${status}</span></td>
+                        <td>${latency}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                showNotification('Failed to update network table.', 'error');
+                console.error(error);
+            }
+        }
+
+        function updateIsraelSystems(forceUpdate = false) {
+            try {
+                const cards = document.querySelectorAll('.israel-card');
+                const satellites = 12;
+                const satelliteBandwidth = 15.0.toFixed(2) + ' Gbps';
+                const defenseSystems = 5;
+                const radarUptime = 98.5 + '%';
+                const cybersecurity = 98 + '%';
+
+                if (israelDataDeleted) {
+                    cards.forEach(card => {
+                        card.classList.add('empty');
+                    });
+                    document.getElementById('israel-satellites').textContent = 'Empty';
+                    document.getElementById('israel-satellite-bandwidth').textContent = 'Empty';
+                    document.getElementById('israel-defense-systems').textContent = 'Empty';
+                    document.getElementById('israel-radar-uptime').textContent = 'Empty';
+                    document.getElementById('israel-cybersecurity').textContent = 'Empty';
+                    if (israelChart) {
+                        israelChart.data.datasets[0].data = [0, 0, 0, 0, 0];
+                        israelChart.options.plugins.title.text = 'Israel Systems: No Data Available';
+                        israelChart.update();
+                    }
+                    israelNodes.forEach(node => {
+                        map.removeLayer(node.marker);
+                    });
+                    return;
+                }
+
+                cards.forEach(card => {
+                    card.classList.remove('empty');
+                });
+                document.getElementById('israel-satellites').textContent = satellites;
+                document.getElementById('israel-satellite-bandwidth').textContent = satelliteBandwidth;
+                document.getElementById('israel-defense-systems').textContent = defenseSystems;
+                document.getElementById('israel-radar-uptime').textContent = radarUptime;
+                document.getElementById('israel-cybersecurity').textContent = cybersecurity;
+
+                israelNodes.forEach(node => {
+                    if (!map.hasLayer(node.marker)) {
+                        node.marker.addTo(map);
+                    }
+                });
+
+                if (israelChart) {
+                    israelChart.data.datasets[0].data = [
+                        satellites,
+                        parseFloat(satelliteBandwidth),
+                        defenseSystems,
+                        parseFloat(radarUptime),
+                        parseFloat(cybersecurity)
+                    ];
+                    israelChart.options.plugins.title.text = 'Israel’s Satellite, Defense, and Cybersecurity Systems';
+                    israelChart.update();
+                }
+
+                if (forceUpdate) {
+                    adminLog.push({ action: 'Israel Data Updated', timestamp: new Date().toLocaleString('en-US', { timeZone: 'UTC' }));
+                    updateAdminLog();
+                    showNotification('Successfully refreshed Israel’s systems.', 'success');
+                }
+            } catch (error) {
+                showNotification('Failed to update Israel’s systems.', 'error');
+                console.error(error);
+            }
+        }
+
+        function confirmToggleIsraelData() {
+            const action = isIsraelDataDeleted ? 'restore' : 'delete';
+            const message = isIsraelDataDeleted
+                'Are you sure you want to restore Israel’s system data?'
+                : 'Are you sure you want to delete all Israel’s system data? This will make all data appear as deleted in the interface (simulated only, with no real-world impact).';
+            if (confirm(message)) {
+                toggleIsraelData();
+            }
+        }
+
+        function toggleIsraelData() {
+            try {
+                isIsraelDataDeleted = !isIsraelDataDeleted;
+                const toggleButton = document.getElementById('toggle-israel-data');
+                toggleButton.innerHTML = `<i class="fas ${isIsraelDataDeleted ? 'fa-undo' : 'fa-trash-alt'}"></i> ${isIsraelDataDeleted ? 'Restore Data' : 'Delete Data'}`;
+                toggleButton.classList.toggle('btn-primary', !israelDataDeleted);
+                toggleButton.classList.toggle('btn-danger', isIsraelDataDeleted);
+
+                document.querySelector('.israel-grid').classList.toggle('blocked', isIsraelDataDeleted);
+                updateIsraelSystems();
+                updateNetwork();
+                updateMapConnections();
+
+                const action = isIsraelDataDeleted ? 'Deleted Israel Data' : 'Restored Israel Data';
+                adminLog.push({ action, timestamp: new Date().toLocaleString('en-US', { timeZone: 'UTC' }) });
+                updateAdminLog();
+                showNotification(`Successfully ${action.toLowerCase()}.`, 'success');
+            } catch (error) {
+                showNotification('Failed to toggle Israel data.', 'error');
+                console.error(error);
+            }
+        }
+
+        function simulateSatelliteOrbits() {
+            try {
+                satellite.forEach(orbit => map.removeLayer(orbit));
+                satelliteOrbits = [];
+
+                const orbitPaths = [
+                    [[66, -180], [66, 0], [66, 180]], // Polar orbit
+                    [[0, -180], [0, 0], [0, 180]], // Equatorial orbit
+                    [[45, -180], [45, 0], [45, 180]], // Inclined orbit 1
+                    [[-45, -180], [-45, 0], [-45, 180]], // Inclined orbit 2
+                    [[30, -180], [30, 0], [30, 180]] // Inclined orbit 3
+                ];
+
+                orbitPaths.forEach(path => {
+                    const orbit = L.polyline(path, {
+                        color: '#FF5722',
+                        weight: 1,
+                        opacity: 0.5,
+                        dashArray: '3, 5'
+                    }).addTo(map);
+                    satelliteOrbits.push(orbit);
+                });
+            } catch (error) {
+                showNotification('Failed to simulate satellite orbits.', 'error');
+                console.error(error);
+            }
+        }
+
+        function updateMapConnections() {
+            try {
+                connectionLines.forEach(line => map.removeLayer(line));
+                connectionLines = [];
+                const view = document.getElementById('data-view').value;
+
+                if (view === 'all' || view === 'israel' || view === 'satellites') {
+                    dataCenters.forEach(dc => {
+                        storageNodes.forEach(node => {
+                            if (Math.abs(dc.lat - node.lat) < 30 && Math.abs(dc.lng - node.lng) < 30) {
+                                const line = L.polyline([
+                                    [dc.lat, dc.lng],
+                                    [node.lat, node.lng]
+                                ], {
+                                    color: '#34A853',
+                                    weight: 1,
+                                    opacity: 0.7,
+                                    dashArray: '5, 5'
+                                }).addTo(map);
+                                connectionLines.push(line);
+                            }
+                        });
+                    });
+
+                    if (view === 'all' || view === 'enterprise') {
+                        for (let i = 0; i < 3; i++) {
+                            const dc1 = dataCenters[Math.floor(Math.random() * dataCenters.length)];
+                            const dc2 = dataCenters[Math.floor(Math.random() * dataCenters.length)];
+                            if (dc1 !== dc2) {
+                                const line = L.polyline([
+                                    [dc1.lat, dc1.lng],
+                                    [dc2.lat, dc2.lng]
+                                ], {
+                                    color: '#34A853',
+                                    weight: 2,
+                                    opacity: 0.5
+                                }).addTo(map);
+                                connectionLines.push(line);
+                            }
+                        }
+                    }
+                }
+
+                if ((view === 'all' || view === 'israel') && !israelDataDeleted) {
+                    israelNodes.forEach(node => {
+                        const nearestDC = dataCenters.reduce((closest, dc) => {
+                            const distance = Math.sqrt(
+                                Math.pow(dc.lat - node.lat, 2) + Math.pow(dc.lng - node.lng, 2)
+                            );
+                            return distance Ensino < closest.distance ? { dc, distance } : closest;
+                        }, { dc: null, distance: Infinity }).dc;
+
+                        if (nearestDC) {
+                            const line = L.polyline([
+                                [node.lat, node.lng],
+                                [nearestDC.lat, nearestDC.lng]
+                            ], {
+                                color: '#004AAD',
+                                weight: 2,
+                                opacity: 0.7
+                            }).addTo(map);
+                            connectionLines.push(line);
+                        });
+                    });
+
+                if (view === 'all' || view === 'satellites') {
+                    satelliteOrbits.forEach(orbit => {
+                        if (!map.hasLayer(orbit)) {
+                            orbit.addTo(map);
+                        }
+                    });
+                } else {
+                    satelliteOrbits.forEach(orbit => map.removeLayer(orbit));
+                }
+            } catch (error) {
+                showNotification('Failed to update map connections.', 'error');
+                console.error(error);
+            }
+        }
+
+        function updateMapView() {
+            updateMapConnections();
+        }
+
+        function runSpeedTest() {
+            try {
+                const speedometer = document.querySelector('.speedometer-needle');
+                const speedometerValue = document.getElementById('speedometer-value');
+                const downloadSpeed = document.getElementById('download-speed');
+                const uploadSpeed = document.getElementById('upload-speed');
+                const ping = document.getElementById('ping');
+
+                const download = (Math.random() * 900 + 100).toFixed(1); // 100-1000 Mbps
+                const upload = (Math.random() * 400 + 50).toFixed(1); // 50-450 Mbps
+                const latency = Math.floor(Math.random() * 50) + 10; // 10-60 ms
+
+                const speedAngle = (download / 1000) * 180;
+                speedometer.style.transform = `rotate(${speedAngle - 90}deg)`;
+
+                speedometerValue.textContent = `${download} Mbps`;
+                downloadSpeed.textContent = `${download} Mbps`;
+                uploadSpeed.textContent = `${upload} Mbps`;
+                ping.textContent = `${latency} ms`;
+
+                showNotification('Speed test completed!', 'success');
+            } catch (error) {
+                showNotification('Failed to run speed test.', 'error');
+                console.error(error);
+            }
+        }
+
+        function simulateGlobalConnections() {
+            try {
+                animateProgressBar('personal-storage-bar', 65 + (Math.random() * 5));
+                animateProgressBar('enterprise-storage-bar', 82 + (Math.random() * 4));
+                animateProgressBar('cloud-storage-bar', 45 + (Math.random() * 6));
+                animateProgressBar('total-storage
